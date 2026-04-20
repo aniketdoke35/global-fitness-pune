@@ -17,11 +17,11 @@ const HeroSlider = ({ openAuth }) => {
   return (
     <section id="hero" className="relative h-screen w-full overflow-hidden bg-bgPrimary">
       {slides.map((slide, index) => (
-        <div key={index} 
-             className={`absolute top-0 left-0 w-full h-full bg-cover bg-center transition-opacity duration-1000 flex items-center ${index === current ? 'opacity-100 z-10' : 'opacity-0'}`}
-             style={{ backgroundImage: `url(${slide.image})` }}>
+        <div key={index}
+          className={`absolute top-0 left-0 w-full h-full bg-cover bg-center transition-opacity duration-1000 flex items-center ${index === current ? 'opacity-100 z-10' : 'opacity-0'}`}
+          style={{ backgroundImage: `url(${slide.image})` }}>
           <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/50 to-black/20 z-[1] max-md:bg-gradient-to-t max-md:from-black/90 max-md:via-black/50 max-md:to-black/30"></div>
-          
+
           <div className="w-full max-w-[1400px] mx-auto px-8 relative z-[2]">
             <div className={`max-w-[800px] text-left transform transition-all duration-700 ease-out delay-300 ${index === current ? 'translate-y-0 opacity-100' : 'translate-y-[30px] opacity-0'} max-md:text-center max-md:mx-auto max-md:pt-24`}>
               <h1 className="text-[clamp(3.5rem,8vw,6.5rem)] leading-tight text-white mb-4 drop-shadow-2xl uppercase tracking-tight">{slide.title}</h1>
@@ -37,7 +37,7 @@ const HeroSlider = ({ openAuth }) => {
       <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex gap-4 z-20">
         {slides.map((_, index) => (
           <button key={index} onClick={() => setCurrent(index)}
-                  className={`w-3 h-3 rounded-full border-2 border-white/50 transition-all ${index === current ? 'bg-accentPrimary border-accentPrimary scale-125' : 'bg-transparent'}`}></button>
+            className={`w-3 h-3 rounded-full border-2 border-white/50 transition-all ${index === current ? 'bg-accentPrimary border-accentPrimary scale-125' : 'bg-transparent'}`}></button>
         ))}
       </div>
     </section>
