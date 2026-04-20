@@ -22,17 +22,18 @@ const AdminDashboard = () => {
 
   // Members State
   const [gymMembers, setGymMembers] = useState([
-    { id: 1, name: 'Rahul Sharma', mobile: '+91 98765 43210', plan: 'Yearly Couple', joinDate: '2026-04-18', expireDate: '2027-04-18', status: 'Active' },
-    { id: 2, name: 'Priya Patel', mobile: '+91 87654 32109', plan: 'Monthly Girls', joinDate: '2026-04-19', expireDate: '2026-05-19', status: 'Active' },
-    { id: 3, name: 'Amit Singh', mobile: '+91 76543 21098', plan: 'Yearly Boys', joinDate: '2025-04-15', expireDate: '2026-04-15', status: 'Expired' },
-    { id: 4, name: 'Neha Gupta', mobile: '+91 65432 10987', plan: 'Monthly Girls', joinDate: '2026-03-01', expireDate: '2026-04-01', status: 'Expired' },
-    { id: 5, name: 'Vikram Joshi', mobile: '+91 54321 09876', plan: 'Yearly Boys', joinDate: '2026-04-20', expireDate: '2027-04-20', status: 'Active' },
-    { id: 6, name: 'Sonal Desai', mobile: '+91 43210 98765', plan: 'Monthly Girls', joinDate: '2026-04-15', expireDate: '2026-05-15', status: 'Active' },
-    { id: 7, name: 'Rohan Mehta', mobile: '+91 32109 87654', plan: 'Monthly Boys', joinDate: '2026-02-10', expireDate: '2026-03-10', status: 'Expired' },
-    { id: 8, name: 'Kavita Singh', mobile: '+91 21098 76543', plan: 'Yearly Couple', joinDate: '2025-05-20', expireDate: '2026-05-20', status: 'Expiring Soon' }
+    { id: 1, memberId: 'GF-001', name: 'Rahul Sharma', mobile: '+91 98765 43210', plan: 'Yearly Couple', joinDate: '2026-04-18', expireDate: '2027-04-18', status: 'Active' },
+    { id: 2, memberId: 'GF-002', name: 'Priya Patel', mobile: '+91 87654 32109', plan: 'Monthly Girls', joinDate: '2026-04-19', expireDate: '2026-05-19', status: 'Active' },
+    { id: 3, memberId: 'GF-003', name: 'Amit Singh', mobile: '+91 76543 21098', plan: 'Yearly Boys', joinDate: '2025-04-15', expireDate: '2026-04-15', status: 'Expired' },
+    { id: 4, memberId: 'GF-004', name: 'Neha Gupta', mobile: '+91 65432 10987', plan: 'Monthly Girls', joinDate: '2026-03-01', expireDate: '2026-04-01', status: 'Expired' },
+    { id: 5, memberId: 'GF-005', name: 'Vikram Joshi', mobile: '+91 54321 09876', plan: 'Yearly Boys', joinDate: '2026-04-20', expireDate: '2027-04-20', status: 'Active' },
+    { id: 6, memberId: 'GF-006', name: 'Sonal Desai', mobile: '+91 43210 98765', plan: 'Monthly Girls', joinDate: '2026-04-15', expireDate: '2026-05-15', status: 'Active' },
+    { id: 7, memberId: 'GF-007', name: 'Rohan Mehta', mobile: '+91 32109 87654', plan: 'Monthly Boys', joinDate: '2026-02-10', expireDate: '2026-03-10', status: 'Expired' },
+    { id: 8, memberId: 'GF-008', name: 'Kavita Singh', mobile: '+91 21098 76543', plan: 'Yearly Couple', joinDate: '2025-05-20', expireDate: '2026-05-20', status: 'Expiring Soon' }
   ]);
   const [showMemberModal, setShowMemberModal] = useState(false);
   const [editingMember, setEditingMember] = useState(null);
+  const [isCouplePlan, setIsCouplePlan] = useState(false);
 
   useEffect(() => {
     const defaultFallbackPlans = [
@@ -142,17 +143,61 @@ const AdminDashboard = () => {
   const handleSaveMember = (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
-    const updated = gymMembers.map(m => {
-      if (m.id === editingMember.id) {
-        return {
-          ...m,
-          joinDate: fd.get('joinDate'),
-          expireDate: fd.get('expireDate'),
-          status: new Date(fd.get('expireDate')) > new Date() ? 'Active' : 'Expired'
-        };
-      }
-      return m;
-    });
+
+    // Compute plan string
+    const pType = fd.get('planType');
+    const pDur = fd.get('planDuration');
+    const computedPlan = pType === 'Custom' ? 'Custom Plan' : `${pDur} ${pType}`;
+
+    // Compute Expiration Date
+    const jDate = new Date(fd.get('joinDate'));
+    let eDate = new Date(jDate);
+    if (pDur === 'Yearly') {
+       eDate.setFullYear(eDate.getFullYear() + 1);
+    } else {
+       const monthsToAdd = parseInt(pDur.split(' ')[0]) || 1;
+       eDate.setMonth(eDate.getMonth() + monthsToAdd);
+    }
+    const expireDateStr = eDate.toISOString().split('T')[0];
+    const mStatus = eDate > new Date() ? 'Active' : 'Expired';
+
+    // Handle Couple Names
+    let finalName = fd.get('name');
+    if (pType === 'Couple' && fd.get('name2')) {
+       finalName = `${finalName} & ${fd.get('name2')}`;
+    }
+
+    let updated;
+
+    if (editingMember) {
+      updated = gymMembers.map(m => {
+        if (m.id === editingMember.id) {
+          return {
+            ...m,
+            name: finalName,
+            mobile: fd.get('mobile'),
+            plan: computedPlan,
+            joinDate: fd.get('joinDate'),
+            expireDate: expireDateStr,
+            status: mStatus
+          };
+        }
+        return m;
+      });
+    } else {
+      const generatedId = `GF-${Math.floor(100 + Math.random() * 900)}`;
+      updated = [{
+        id: Date.now(),
+        memberId: generatedId,
+        name: finalName,
+        mobile: fd.get('mobile'),
+        plan: computedPlan,
+        joinDate: fd.get('joinDate'),
+        expireDate: expireDateStr,
+        status: mStatus
+      }, ...gymMembers];
+    }
+    
     setGymMembers(updated);
     setShowMemberModal(false);
     setEditingMember(null);
@@ -173,7 +218,8 @@ const AdminDashboard = () => {
   ]);
 
   const filteredMembers = gymMembers.filter(member => {
-    const matchesSearch = member.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const searchLower = searchTerm.toLowerCase();
+    const matchesSearch = member.name.toLowerCase().includes(searchLower) || (member.memberId && member.memberId.toLowerCase().includes(searchLower));
     if (!matchesSearch) return false;
     if (filterType === 'Expired') return member.status === 'Expired' || member.status === 'Expiring Soon';
     if (filterType === 'Recent') {
@@ -307,7 +353,13 @@ const AdminDashboard = () => {
                   <div className="px-6 py-5 border-b border-glassBorder flex flex-col sm:flex-row justify-between items-center gap-4 bg-bgSecondary/80">
                     <h3 className="font-heading font-bold text-xl text-white">Member Directory</h3>
                     <div className="flex items-center gap-3">
-                      <Filter size={18} className="text-textMuted" />
+                      <button 
+                        onClick={() => { setEditingMember(null); setIsCouplePlan(false); setShowMemberModal(true); }}
+                        className="bg-accentPrimary text-black px-4 py-2 rounded-lg font-bold hover:bg-[#b3e600] transition-colors flex items-center gap-2 shadow-[0_0_15px_rgba(204,255,0,0.3)] text-sm mr-2 whitespace-nowrap"
+                      >
+                        <Plus size={16} /> Add Member
+                      </button>
+                      <Filter size={18} className="text-textMuted hidden sm:block" />
                       <select 
                         value={filterType}
                         onChange={(e) => setFilterType(e.target.value)}
@@ -326,6 +378,7 @@ const AdminDashboard = () => {
                   <table className="w-full text-left border-collapse min-w-[900px]">
                     <thead>
                       <tr className="bg-[#0f0f0f] border-b border-glassBorder text-textMuted text-xs font-bold uppercase tracking-widest">
+                        <th className="px-6 py-4">ID</th>
                         <th className="px-6 py-4">Name</th>
                         <th className="px-6 py-4">Mobile No.</th>
                         <th className="px-6 py-4">Selected Plan</th>
@@ -339,7 +392,8 @@ const AdminDashboard = () => {
                       {filteredMembers.length > 0 ? (
                         filteredMembers.map(member => (
                           <tr key={member.id} className="hover:bg-bgPrimary/50 transition-colors group">
-                            <td className="px-6 py-4 font-medium text-white group-hover:text-accentPrimary transition-colors">{member.name}</td>
+                            <td className="px-6 py-4 font-mono font-bold text-accentPrimary">{member.memberId}</td>
+                            <td className="px-6 py-4 font-medium text-white group-hover:text-amber-50 transition-colors">{member.name}</td>
                             <td className="px-6 py-4 text-textSecondary">{member.mobile}</td>
                             <td className="px-6 py-4 text-textSecondary">
                               <span className="px-3 py-1 bg-white/5 rounded text-sm whitespace-nowrap">{member.plan}</span>
@@ -357,7 +411,7 @@ const AdminDashboard = () => {
                             </td>
                             <td className="px-6 py-4 text-right">
                               <button 
-                                onClick={() => { setEditingMember(member); setShowMemberModal(true); }}
+                                onClick={() => { setEditingMember(member); setIsCouplePlan(member.plan.includes('Couple')); setShowMemberModal(true); }}
                                 className="inline-flex items-center gap-2 text-textSecondary hover:text-white border border-glassBorder hover:border-accentPrimary hover:bg-accentPrimary/10 px-4 py-1.5 rounded transition-colors text-sm font-medium"
                               >
                                 <Edit2 size={16} /> Edit
@@ -385,53 +439,121 @@ const AdminDashboard = () => {
               <div className="bg-bgSecondary w-full max-w-xl rounded-2xl border border-glassBorder overflow-hidden shadow-2xl animate-fade-in-up">
                 <div className="flex justify-between items-center p-6 border-b border-glassBorder">
                   <h2 className="text-xl font-heading font-bold text-white">
-                    Edit Membership Dates
+                    {editingMember ? 'Edit Member Details' : 'Add New Member'}
                   </h2>
                   <button onClick={() => { setShowMemberModal(false); setEditingMember(null); }} className="text-textMuted hover:text-white">
                     <X size={24} />
                   </button>
                 </div>
-                <form onSubmit={handleSaveMember} className="p-8 space-y-6">
-                  <div>
-                    <label className="block text-sm font-medium text-textSecondary mb-2">Member Name</label>
-                    <input 
-                      readOnly
-                      defaultValue={editingMember?.name || ''}
-                      className="w-full bg-bgPrimary border border-glassBorder rounded-lg px-4 py-3 text-white focus:outline-none focus:border-accentPrimary transition-colors font-bold opacity-75 cursor-not-allowed"
-                    />
-                  </div>
-                  
+                <form onSubmit={handleSaveMember} className="p-8 space-y-5">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-textSecondary mb-2">Joining Date</label>
+                      <label className="block text-sm font-medium text-textSecondary mb-2">Member Name {isCouplePlan && '(1)'}</label>
                       <input 
-                        type="date"
-                        name="joinDate" 
-                        defaultValue={editingMember?.joinDate || ''}
-                        required 
-                        className="w-full bg-bgPrimary border border-glassBorder rounded-lg px-4 py-3 text-white focus:outline-none focus:border-accentPrimary"
+                        name="name"
+                        required
+                        defaultValue={editingMember?.name?.split(' & ')[0] || ''}
+                        placeholder="e.g. Rahul Sharma"
+                        className="w-full bg-bgPrimary border border-glassBorder rounded-lg px-4 py-3 text-white focus:outline-none focus:border-accentPrimary transition-colors font-bold"
                       />
+                    </div>
+                    {isCouplePlan ? (
+                      <div>
+                        <label className="block text-sm font-medium text-textSecondary mb-2">Member Name (2)</label>
+                        <input 
+                          name="name2"
+                          required
+                          defaultValue={editingMember?.name?.split(' & ')[1] || ''}
+                          placeholder="e.g. Priya Sharma"
+                          className="w-full bg-bgPrimary border border-glassBorder rounded-lg px-4 py-3 text-white focus:outline-none focus:border-accentPrimary transition-colors font-bold"
+                        />
+                      </div>
+                    ) : (
+                      <div>
+                        <label className="block text-sm font-medium text-textSecondary mb-2">Mobile No.</label>
+                        <input 
+                          name="mobile"
+                          required
+                          defaultValue={editingMember?.mobile || ''}
+                          placeholder="e.g. +91 98765 43210"
+                          className="w-full bg-bgPrimary border border-glassBorder rounded-lg px-4 py-3 text-white focus:outline-none focus:border-accentPrimary transition-colors"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {isCouplePlan && (
+                    <div>
+                      <label className="block text-sm font-medium text-textSecondary mb-2">Mobile No.</label>
+                      <input 
+                        name="mobile"
+                        required
+                        defaultValue={editingMember?.mobile || ''}
+                        placeholder="e.g. +91 98765 43210"
+                        className="w-full bg-bgPrimary border border-glassBorder rounded-lg px-4 py-3 text-white focus:outline-none focus:border-accentPrimary transition-colors"
+                      />
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-textSecondary mb-2">Plan Type</label>
+                      <select 
+                        name="planType" 
+                        required 
+                        defaultValue={editingMember?.plan?.includes('Couple') ? 'Couple' : editingMember?.plan?.includes('Girls') ? 'Girls' : editingMember?.plan?.includes('Custom') ? 'Custom' : 'Boys'}
+                        onChange={(e) => setIsCouplePlan(e.target.value === 'Couple')}
+                        className="w-full bg-bgPrimary border border-glassBorder rounded-lg px-4 py-3 text-white focus:outline-none focus:border-accentPrimary"
+                      >
+                        <option value="Boys">Boys Plan</option>
+                        <option value="Girls">Girls Plan</option>
+                        <option value="Couple">Couple Plan</option>
+                        <option value="Custom">Custom / Other</option>
+                      </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-textSecondary mb-2">Expire Date</label>
-                      <input 
-                        type="date"
-                        name="expireDate" 
-                        defaultValue={editingMember?.expireDate || ''}
+                      <label className="block text-sm font-medium text-textSecondary mb-2">Duration</label>
+                      <select 
+                        name="planDuration" 
                         required 
+                        defaultValue={editingMember?.plan?.includes('Yearly') ? 'Yearly' : (editingMember?.plan?.match(/\d+ Month/)?.[0] || '1 Month')}
                         className="w-full bg-bgPrimary border border-glassBorder rounded-lg px-4 py-3 text-white focus:outline-none focus:border-accentPrimary"
-                      />
+                      >
+                        <option value="1 Month">1 Month</option>
+                        <option value="2 Months">2 Months</option>
+                        <option value="3 Months">3 Months</option>
+                        <option value="4 Months">4 Months</option>
+                        <option value="5 Months">5 Months</option>
+                        <option value="6 Months">6 Months</option>
+                        <option value="7 Months">7 Months</option>
+                        <option value="8 Months">8 Months</option>
+                        <option value="9 Months">9 Months</option>
+                        <option value="10 Months">10 Months</option>
+                        <option value="11 Months">11 Months</option>
+                        <option value="Yearly">Yearly</option>
+                      </select>
                     </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-textSecondary mb-2">Joining Date</label>
+                    <input 
+                      type="date"
+                      name="joinDate" 
+                      defaultValue={editingMember?.joinDate || new Date().toISOString().split('T')[0]}
+                      required 
+                      className="w-full bg-bgPrimary border border-glassBorder rounded-lg px-4 py-3 text-white focus:outline-none focus:border-accentPrimary"
+                    />
                   </div>
 
                   <div className="p-4 bg-orange-500/10 border border-orange-500/20 rounded-lg">
                     <p className="text-sm text-orange-400">
-                      <strong>Note:</strong> Editing the expire date may instantly change the active/expired status of {editingMember?.name}.
+                      <strong>Note:</strong> Expire date instantly determines the active/expired status of this member mathematically against today's date!
                     </p>
                   </div>
                   
-                  <button type="submit" className="w-full bg-accentPrimary text-black font-bold uppercase tracking-wider py-4 rounded-lg hover:bg-[#b3e600] transition-colors shadow-lg">
-                    Save Dates & Status
+                  <button type="submit" className="w-full bg-accentPrimary text-black font-bold uppercase tracking-wider py-4 rounded-lg mt-4 hover:bg-[#b3e600] transition-colors shadow-lg">
+                    {editingMember ? 'Save Member Details' : 'Register New Member'}
                   </button>
                 </form>
               </div>
