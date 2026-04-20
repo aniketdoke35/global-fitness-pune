@@ -62,6 +62,8 @@ const Footer = () => {
               <li><a href="#media" className="text-textSecondary hover:text-accentPrimary flex items-center gap-2 transition-colors before:content-['›'] before:text-accentPrimary before:font-bold">Gym Tour</a></li>
               <li><a href="#schedule" className="text-textSecondary hover:text-accentPrimary flex items-center gap-2 transition-colors before:content-['›'] before:text-accentPrimary before:font-bold">Classes Schedule</a></li>
               <li><a href="#pricing" className="text-textSecondary hover:text-accentPrimary flex items-center gap-2 transition-colors before:content-['›'] before:text-accentPrimary before:font-bold">Membership Plans</a></li>
+              <li><a href="/dashboard" className="text-textSecondary hover:text-accentPrimary flex items-center gap-2 transition-colors before:content-['›'] before:text-accentPrimary before:font-bold">Member Dashboard</a></li>
+              <li><a href="/admin" className="text-textSecondary hover:text-accentPrimary flex items-center gap-2 transition-colors before:content-['›'] before:text-accentPrimary before:font-bold">Admin Portal</a></li>
             </ul>
           </div>
 
